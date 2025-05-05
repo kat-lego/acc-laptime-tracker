@@ -1,0 +1,49 @@
+package accshm
+
+type StaticInfo struct {
+	SMVersion                [15]uint16
+	ACVersion                [15]uint16
+	NumberOfSessions         int32
+	NumCars                  int32
+	CarModel                 [33]uint16
+	Track                    [33]uint16
+	PlayerName               [33]uint16
+	PlayerSurname            [33]uint16
+	PlayerNick               [33]uint16
+	SectorCount              int32
+	MaxTorque                float32
+	MaxPower                 float32
+	MaxRpm                   int32
+	MaxFuel                  float32
+	SuspensionMaxTravel      [4]float32
+	TyreRadius               [4]float32
+	MaxTurboBoost            float32
+	Deprecated1              float32
+	Deprecated2              float32
+	PenaltiesEnabled         int32
+	AidFuelRate              float32
+	AidTireRate              float32
+	AidMechanicalDamage      float32
+	AidAllowTyreBlankets     float32
+	AidStability             float32
+	AidAutoClutch            int32
+	AidAutoBlip              int32
+	HasDRS                   int32
+	HasERS                   int32
+	HasKERS                  int32
+	KersMaxJoules            float32
+	EngineBrakeSettingsCount int32
+	ErsPowerControllerCount  int32
+	TrackSPlineLength        float32
+	TrackConfiguration       [33]uint16
+	ErsMaxJ                  float32
+	IsTimedRace              int32
+	HasExtraLap              int32
+	CarSkin                  [33]uint16
+	ReversedGridPositions    int32
+	PitWindowStart           int32
+	PitWindowEnd             int32
+	IsOnline                 int32
+	DryTyresName             [33]uint16
+	WetTyresName             [33]uint16
+}

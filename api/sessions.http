@@ -1,0 +1,15 @@
+### Get paginated sessions (limit 10, offset 0)
+GET http://localhost:8080/api/sessions?limit=10&offset=0
+Accept: application/json
+
+###
+
+### Get all sessions (no pagination)
+GET http://localhost:8080/api/sessions?limit=-1
+Accept: application/json
+
+###
+
+### Invalid limit (should return 400)
+GET http://localhost:8080/api/sessions?limit=abc&offset=0
+Accept: application/json
