@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -11,7 +12,10 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 )
 
-var logger service.Logger
+var (
+	logger      service.Logger
+	startACCOpt bool
+)
 
 type program struct {
 	quit chan struct{}
@@ -27,7 +31,18 @@ func (p *program) Start(s service.Service) error {
 func (p *program) run() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		logger.Warning("Error loading .env file")
+	}
+
+	// Start ACC if flag passed and ACC not running
+	if startACCOpt && !isACCRunning() {
+		err := startACC()
+		if err != nil {
+			logger.Errorf("Failed to start ACC: %v", err)
+		} else {
+			logger.Info("ACC started successfully")
+			time.Sleep(10 * time.Second) // allow time for ACC to launch
+		}
 	}
 
 	watcher := watchers.NewAccWatcher(os.Getenv("ACCLTRCR_POSTGRES_CONNECTION_STRING"), &logger)
@@ -41,7 +56,13 @@ func (p *program) run() {
 			if isACCRunning() {
 				watcher.Peep()
 			} else {
-				logger.Info("ACC is not running")
+				if startACCOpt {
+					logger.Info("ACC has stopped. Exiting because --start-acc was passed.")
+					p.Stop(nil)
+					os.Exit(0)
+				} else {
+					logger.Info("ACC is not running")
+				}
 			}
 			time.Sleep(1 * time.Second)
 		}
@@ -67,7 +88,27 @@ func isACCRunning() bool {
 	return false
 }
 
+func startACC() error {
+	accPath := os.Getenv("ACC_PATH")
+	if accPath == "" {
+		return &os.PathError{Op: "startACC", Path: "ACC_PATH", Err: os.ErrNotExist}
+	}
+	cmd := exec.Command(accPath)
+	return cmd.Start()
+}
+
+func parseFlags() {
+	for _, arg := range os.Args[1:] {
+		if arg == "--start-acc" {
+			startACCOpt = true
+			break
+		}
+	}
+}
+
 func main() {
+	parseFlags()
+
 	svcConfig := &service.Config{
 		Name:        "ACCLaptimeTracker",
 		DisplayName: "ACC Laptime Service",
