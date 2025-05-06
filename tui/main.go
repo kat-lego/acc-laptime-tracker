@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -20,14 +21,19 @@ import (
 )
 
 const (
-	host = "localhost"
-	port = "23234"
+	host = "0.0.0.0"
+	port = "8080"
 )
 
 func main() {
+	key, err := loadHostKeyFromPEM()
+	if err != nil {
+		log.Error("Could not load the host key", "error", err)
+	}
+
 	s, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(host, port)),
-		wish.WithHostKeyPath(".ssh/id_ed25519"),
+		wish.WithHostKeyPEM(key),
 		wish.WithMiddleware(
 			bubbletea.Middleware(teaHandler),
 			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
@@ -65,4 +71,13 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	m := app.New(renderer, &pty)
 
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
+}
+
+func loadHostKeyFromPEM() ([]byte, error) {
+	pemData := os.Getenv("SSH_HOST_KEY_PEM")
+	if pemData == "" {
+		return nil, fmt.Errorf("SSH_HOST_KEY_PEM environment variable is not set")
+	}
+
+	return []byte(pemData), nil
 }
