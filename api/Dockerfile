@@ -9,7 +9,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o acc-laptime-tracker-tui ./tui
+RUN go build -o acc-laptime-tracker-api ./api
 
 FROM ubuntu:22.04
 
@@ -20,8 +20,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY --from=builder /app/acc-laptime-tracker-tui .
+COPY --from=builder /app/acc-laptime-tracker-api .
 
-EXPOSE 8080
+EXPOSE 80
 
-ENTRYPOINT ["./acc-laptime-tracker-tui"]
+ENTRYPOINT ["./acc-laptime-tracker-api"]

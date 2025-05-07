@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/kardianos/service"
 	"github.com/kat-lego/acc-laptime-tracker/pkg/watchers"
 	"github.com/shirou/gopsutil/v3/process"
@@ -29,11 +28,6 @@ func (p *program) Start(s service.Service) error {
 }
 
 func (p *program) run() {
-	err := godotenv.Load()
-	if err != nil {
-		logger.Warning("Error loading .env file")
-	}
-
 	// Start ACC if flag passed and ACC not running
 	if startACCOpt && !isACCRunning() {
 		err := startACC()
