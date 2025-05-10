@@ -27,11 +27,18 @@ func main() {
 	logger = setupLogger()
 	defer logger.Sync()
 
-	repo := repos.NewPostgresAccSessionsRepo(os.Getenv("ACCLTRCR_POSTGRES_CONNECTION_STRING"))
+	cosmosConn := os.Getenv("ACC_COSMOS_CONNECTION_STRING")
+	cosmosDatabase := os.Getenv("ACC_COSMOS_DATABASE")
+	cosmosContainer := os.Getenv("ACC_COSMOS_CONTAINER")
+	repo, err := repos.NewCosmosSessionRepo(cosmosConn, cosmosDatabase, cosmosContainer)
+	if err != nil {
+		logger.Error("failed to connect to cosmos")
+		return
+	}
 
 	router := gin.Default()
 	router.Use(middleware.RateLimiter(rate.Every(time.Second/5), 10))
-	router.GET("/api/sessions", handlers.GetSessionsHandler(repo))
+	router.GET("/api/sessions", handlers.GetSessionsHandler(repo, logger))
 
 	port := os.Getenv("PORT")
 	if port == "" {

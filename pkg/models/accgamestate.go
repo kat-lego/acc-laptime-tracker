@@ -1,6 +1,6 @@
 package models
 
-type LapRecord struct {
+type AccGameState struct {
 	SharedMemoryVersion string `json:"sharedMemoryVersion"`
 	AssettoCorsaVersion string `json:"assettoCorsaVersion"`
 
@@ -12,10 +12,11 @@ type LapRecord struct {
 	NumberOfCars int32   `json:"numberOfCars"`
 	Clock        float32 `json:"clock"`
 
-	CompletedLaps   int32 `json:"lapNumber"`
+	CompletedLaps   int32 `json:"completedLaps"`
 	BestLapTime     int32 `json:"bestLapTime"`
 	PreviousLapTime int32 `json:"previousLapTime"`
 
+	CurrentLapTime     int32 `json:"currentLapTime"`
 	CurrentSectorIndex int32 `json:"sectorIndex"`
 	PreviousSectorTime int32 `json:"previousSectorTime"`
 	IsValid            bool  `json:"isValid"`

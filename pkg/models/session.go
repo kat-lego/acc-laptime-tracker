@@ -1,33 +1,32 @@
 package models
 
 type Session struct {
-	Id              uint   `gorm:"primaryKey" json:"id"`
+	Id              string `json:"id"`
 	StartTime       int64  `json:"startTime"`
 	SessionType     string `json:"sessionType"`
 	Track           string `json:"track"`
 	CarModel        string `json:"carModel"`
+	NumberOfSectors int32  `json:"numberOfSectors"`
 	CompletedLaps   int32  `json:"lapNumber"`
 	BestLapTime     int32  `json:"bestLapTime"`
 	PreviousLapTime int32  `json:"previousLapTime"`
+	IsActive        bool   `json:"isActive"`
+	Player          string `json:"player"`
 
-	Laps []Lap `gorm:"foreignKey:SessionId"`
+	Laps []*Lap `json:"laps"`
 }
 
 type Lap struct {
-	Id        uint `gorm:"primaryKey" json:"id"`
-	SessionId uint `json:"sessionId"`
-
 	LapNumber int32 `json:"lapNumber"`
 	LapTime   int32 `json:"lapTime"`
 	IsValid   bool  `json:"isValid"`
+	IsActive  bool  `json:"isActive"`
 
-	LapSectors []LapSector `gorm:"foreignKey:LapId"`
+	LapSectors []*LapSector `json:"lapSectors"`
 }
 
 type LapSector struct {
-	Id    uint `gorm:"primaryKey" json:"id"`
-	LapId uint `json:"lapId"`
-
 	SectorNumber int32 `json:"sectorNumber"`
 	SectorTime   int32 `json:"sectorTime"`
+	IsActive     bool  `json:"isActive"`
 }

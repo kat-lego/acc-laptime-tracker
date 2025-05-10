@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/kardianos/service"
-	"github.com/kat-lego/acc-laptime-tracker/pkg/watchers"
+	"github.com/kat-lego/acc-laptime-tracker/pkg/repos"
+	"github.com/kat-lego/acc-laptime-tracker/pkg/sessionreader"
 	"github.com/shirou/gopsutil/v3/process"
 )
 
@@ -28,7 +29,6 @@ func (p *program) Start(s service.Service) error {
 }
 
 func (p *program) run() {
-	// Start ACC if flag passed and ACC not running
 	if startACCOpt && !isACCRunning() {
 		err := startACC()
 		if err != nil {
@@ -39,7 +39,16 @@ func (p *program) run() {
 		}
 	}
 
-	watcher := watchers.NewAccWatcher(os.Getenv("ACCLTRCR_POSTGRES_CONNECTION_STRING"), &logger)
+	reader := sessionreader.New(&logger)
+
+	cosmosConn := os.Getenv("ACC_COSMOS_CONNECTION_STRING")
+	cosmosDatabase := os.Getenv("ACC_COSMOS_DATABASE")
+	cosmosContainer := os.Getenv("ACC_COSMOS_CONTAINER")
+	repo, err := repos.NewCosmosSessionRepo(cosmosConn, cosmosDatabase, cosmosContainer)
+	if err != nil {
+		logger.Errorf("failed to connect to cosmos %v", err)
+		os.Exit(1)
+	}
 
 	for {
 		select {
@@ -48,7 +57,10 @@ func (p *program) run() {
 			return
 		default:
 			if isACCRunning() {
-				watcher.Peep()
+				s := reader.GetSessionUpdates()
+				if s != nil {
+					repo.UpsertSessions(s)
+				}
 			} else {
 				if startACCOpt {
 					logger.Info("ACC has stopped. Exiting because --start-acc was passed.")

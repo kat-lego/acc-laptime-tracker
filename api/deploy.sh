@@ -23,4 +23,16 @@ az containerapp up \
   --environment menv-acc-laptime-tracker \
   --image "$FULL_IMAGE_NAME"
 
+# az containerapp update \
+#   --name capp-acc-laptime-tracker-api \
+#   --resource-group rg-acc-laptime-tracker \
+#   --set-env-vars ACC_COSMOS_CONNECTION_STRING=sessions
+
+# az containerapp env create -n menv-acc-laptime-tracker -g rg-acc-laptime-tracker \
+#             --logs-workspace-id e3834547-305e-40b9-8585-5fe92b4bba1d \
+#             --location southafricanorth
+
 rm Dockerfile
+
+
+

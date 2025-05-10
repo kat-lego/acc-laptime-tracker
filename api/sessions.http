@@ -20,6 +20,6 @@ GET https://acc.api.katlegomodupi.com/api/sessions?10=abc&offset=0
 Accept: application/json
 
 ### Get paginated sessions (limit 10, offset 0)
-GET https://capp-acc-laptime-tracker-api.purplebeach-c3a51b53.southafricanorth.azurecontainerapps.io/api/sessions?10=abc&offset=0
+GET https://capp-acc-laptime-tracker-api.salmonfield-1619eb08.southafricanorth.azurecontainerapps.io/api/sessions?10=abc&offset=0
 Accept: application/json
 
