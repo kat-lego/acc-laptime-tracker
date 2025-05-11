@@ -15,6 +15,10 @@ param cosmosDbContainer string = 'sessions'
 @description('tui ssh host key')
 param tuiSshHostKeyPEM string
 
+@secure()
+@description('github pat token')
+param githubToken string
+
 resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: 'vn-acc-laptime-tracker'
   location: location
@@ -158,4 +162,24 @@ resource tuiContainerApp 'Microsoft.App/containerApps@2025-01-01' = {
     #disable-next-line no-unnecessary-dependson
     containerEnv
   ]
+}
+
+resource staticWebApp 'Microsoft.Web/staticSites@2024-04-01' = {
+  name: 'swa-acc-laptime-tracker'
+  location: 'westeurope'
+  sku: {
+    name: 'Free'
+    tier: 'Free'
+  }
+  properties: {
+    repositoryUrl: 'https://github.com/kat-lego/acc-laptime-tracker'
+    branch: 'main'
+    repositoryToken: githubToken
+    buildProperties: {
+      appLocation: 'web'
+      appBuildCommand: 'npm run build'
+      outputLocation: 'out'
+    }
+    provider: 'GitHub'
+  }
 }

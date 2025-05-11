@@ -4,4 +4,5 @@ az deployment group create \
     --template-file ./main.bicep \
     --parameters \
         tuiSshHostKeyPEM="$(cat ~/.ssh/id_acc_laptime_tracker_tui)" \
-        cosmosDbConnectionString="$(pass cosmos/acclaptracker)"
+        cosmosDbConnectionString="$(pass cosmos/acclaptracker)" \
+        githubToken="$(pass acc_github_pat)"
