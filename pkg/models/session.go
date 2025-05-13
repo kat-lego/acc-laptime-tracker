@@ -7,9 +7,8 @@ type Session struct {
 	Track           string `json:"track"`
 	CarModel        string `json:"carModel"`
 	NumberOfSectors int32  `json:"numberOfSectors"`
-	CompletedLaps   int32  `json:"lapNumber"`
-	BestLapTime     int32  `json:"bestLapTime"`
-	PreviousLapTime int32  `json:"previousLapTime"`
+	CompletedLaps   int32  `json:"lapsCompleted"`
+	BestLap         int32  `json:"bestLap"`
 	IsActive        bool   `json:"isActive"`
 	Player          string `json:"player"`
 
@@ -19,6 +18,7 @@ type Session struct {
 type Lap struct {
 	LapNumber int32 `json:"lapNumber"`
 	LapTime   int32 `json:"lapTime"`
+	LapDelta  int32 `json:"lapDelta"`
 	IsValid   bool  `json:"isValid"`
 	IsActive  bool  `json:"isActive"`
 
