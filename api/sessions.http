@@ -1,25 +1,21 @@
-### Get paginated sessions (limit 10, offset 0)
-GET http://localhost:8080/api/sessions?limit=10&offset=0
+@localhost = http://localhost:8080
+@prod = https://acc.api.katlegomodupi.com
+@azure = app-acc-laptime-tracker-api.azurewebsites.net
+
+### Get paginated sessions - Localhost
+GET {{localhost}}/api/sessions?limit=10&offset=0
 Accept: application/json
 
 ###
 
-### Get all sessions (no pagination)
-GET http://localhost:8080/api/sessions?limit=-1
+### Get paginated sessions - Azure
+GET {{azure}}/api/sessions?limit=10&offset=0
 Accept: application/json
 
 ###
 
-### Invalid limit (should return 400)
-GET http://localhost:8080/api/sessions?limit=abc&offset=0
+### Get paginated sessions - Prod
+GET {{prod}}/api/sessions?limit=10&offset=0
 Accept: application/json
 
-
-### Get paginated sessions (limit 10, offset 0)
-GET https://acc.api.katlegomodupi.com/api/sessions?10=abc&offset=0
-Accept: application/json
-
-### Get paginated sessions (limit 10, offset 0)
-GET https://capp-acc-laptime-tracker-api.salmonfield-1619eb08.southafricanorth.azurecontainerapps.io/api/sessions?10=abc&offset=0
-Accept: application/json
 
