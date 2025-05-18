@@ -1,156 +1,90 @@
-import Image from "next/image";
 import SessionInfoPane from "@/components/SessionInfoPane";
 import { Session as AccSession } from "@/models/session";
+import { formatUnixToLocalDateTime } from "@/utilities/date";
+import { getCarName } from "@/utilities/kunosCarMap";
+import { useEffect, useState } from "react";
 
-const sessionData: AccSession[] = [
-  {
-    id: "20250509T093256Z",
-    startTime: 1746886033,
-    sessionType: "ACC_HOTLAP",
-    track: "nurburgring",
-    carModel: "bmw_m4_gt3",
-    player: "anonymous",
-    numberOfSectors: 3,
-    previousLapTime: 2147483647,
-    bestLapTime: 2147483647,
-    completedLaps: 2,
-    isActive: false,
-    laps: [
-      {
-        lapNumber: 1,
-        lapTime: 7647,
-        isValid: true,
-        isActive: false,
-        lapSectors: [
-          {
-            sectorNumber: 1,
-            sectorTime: 2500,
-            isActive: false
-          },
-          {
-            sectorNumber: 2,
-            sectorTime: 2500,
-            isActive: false
-          },
-          {
-            sectorNumber: 3,
-            sectorTime: 2647,
-            isActive: false
-          },
-        ],
-      },
-      {
-        lapNumber: 2,
-        lapTime: 7590,
-        isValid: false,
-        isActive: true,
-        lapSectors: [
-          {
-            sectorNumber: 1,
-            sectorTime: 2490,
-            isActive: false
-          },
-          {
-            sectorNumber: 2,
-            sectorTime: 2500,
-            isActive: false
-          },
-          {
-            sectorNumber: 3,
-            sectorTime: 2600,
-            isActive: false
-          },
-        ],
-      },
-    ],
-  },
-];
+interface AccSessionResponse {
+  sessions: AccSession[]
+  total: number
+}
 
 export default function Home() {
+
+  const [sessions, setSessions] = useState<AccSession[]>([])
+  const [selectedSession, setSelectedSession] = useState<number>(-1)
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      const BASE_URL = 'http://localhost:8080'
+      const response = await fetch(`${BASE_URL}/api/sessions`)
+      const sessions = await response.json() as AccSessionResponse
+
+      setSessions(sessions.sessions)
+      if (sessions.sessions.length > 0) {
+        setSelectedSession(0)
+      }
+    }
+
+    fetchSessions()
+  }, [])
+
+  const handleSelectSession = (index: number) => {
+    setSelectedSession(index)
+  }
+
   return (
     <div
-      className="drawer justify-items-center min-h-screen gap-15
+      className="justify-items-center min-h-screen gap-15
       font-[family-name:var(--font-geist-sans)] pb-16 overflow-x-hidden">
 
-      <input id="my-drawer" type="checkbox" className="drawer-toggle" />
+      <header className="sticky top-0 z-50 navbar bg-app-black h-fit">
 
-      <div className="drawer-content">
-
-        <header className="sticky top-0 z-50 navbar bg-app-black h-fit">
-
-          <div className="navbar-start">
-            <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
+        <div className="navbar-start">
+          <div className="dropdown">
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
               <DropDownIcon />
-            </label>
+            </div>
+            <ul
+              tabIndex={0}
+              className="list dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 shadow">
+              {sessions.map((s, i) => (
+                <li className="list-row hover:bg-blue-600" key={s.id} onClick={() => handleSelectSession(i)}>
+                  <div className="uppercase font-semibold opacity">
+                    <div>{s.track}</div>
+                    <div className="uppercase font-semibold opacity-60">
+                      {getCarName(s.carModel)}
+                    </div>
+                    <div className="text-xs uppercase font-semibold opacity-80">
+                      {formatUnixToLocalDateTime(s.startTime)}
+                    </div>
+                  </div>
+                </li>
+              ))}
+
+              {/* <div className="join grid grid-cols-2"> */}
+              {/*   <button className="join-item btn ">load prev</button> */}
+              {/*   <button className="join-item btn">load next</button> */}
+              {/* </div> */}
+            </ul>
           </div>
+        </div>
 
-          <div className="navbar-end">
-            <a className="btn btn-ghost text-xl">
-              ACC LAPTIME TRACKER
-            </a>
-          </div>
+        <div className="navbar-end">
+          <a className="btn btn-ghost text-xl">
+            ACC LAPTIME TRACKER
+          </a>
+        </div>
 
-        </header>
+      </header>
 
-        <main className="relative flex flex-col gap-8 items-start sm:items-start
+      <main className="relative flex flex-col gap-8
           max-w-screen-lg w-full px-6 xs:px-1">
-          <SessionInfoPane session={sessionData[0]} />
-        </main>
-
-        <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-          <a
-            className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              aria-hidden
-              src="/file.svg"
-              alt="File icon"
-              width={16}
-              height={16}
-            />
-            Learn
-          </a>
-          <a
-            className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              aria-hidden
-              src="/window.svg"
-              alt="Window icon"
-              width={16}
-              height={16}
-            />
-            Examples
-          </a>
-          <a
-            className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-            href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              aria-hidden
-              src="/globe.svg"
-              alt="Globe icon"
-              width={16}
-              height={16}
-            />
-            Go to nextjs.org →
-          </a>
-        </footer>
-      </div>
-      <div className="drawer-side">
-        <label htmlFor="my-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
-        <ul className="list rounded-box shadow-md bg-base-100 menu min-h-full w-80 p-4">
-          <li className="list-row">Start Time, Track, Carmodel</li>
-        </ul>
-      </div>
+        {sessions.length > 0 && selectedSession == -1
+          && <span className="text-center">select a session</span>}
+        {sessions.length > 0 && selectedSession >= 0
+          && <SessionInfoPane session={sessions[selectedSession]} />}
+      </main>
     </div>
   );
 }

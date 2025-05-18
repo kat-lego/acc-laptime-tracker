@@ -9,13 +9,12 @@ interface SessionInfoPaneParams {
 export default function SessionInfoPane({ session }: SessionInfoPaneParams) {
 
   return (
-    <>
+    <div>
       <SessionHero session={session} />
       <SessionLapTable session={session} />
-    </>
+    </div>
   )
 }
-
 
 interface SessionHeroParams {
   session: Session
@@ -24,16 +23,12 @@ interface SessionHeroParams {
 function SessionHero({ session }: SessionHeroParams) {
 
   return (
-    <div className="hero">
+    <div className="hero pb-6">
       <div className="hero-content text-center">
         <div className="">
-          <h2 className="text-4xl font-bold">{formatUnixToLocalDateTime(session.startTime)}</h2>
-          <h1 className="text-3xl font-bold text-blue-500">{session.track}</h1>
-          <h2 className="text-3xl font-bold text-pink-500">{getCarName(session.carModel)}</h2>
-          <p className="py-6">
-            Best Time: {formatMilliseconds(session.bestLapTime)} |
-            Previous Time: {formatMilliseconds(session.previousLapTime)}
-          </p>
+          <h1 className="text-4xl font-bold text-blue-500 uppercase">{session.track}</h1>
+          <h2 className="text-3xl font-bold opacity-50 uppercase">{getCarName(session.carModel)}</h2>
+          <h2 className="text-3xl font-bold pb-4 opacity-80">{formatUnixToLocalDateTime(session.startTime)}</h2>
           {session.isActive && <div className="badge badge-success">active</div>}
           {!session.isActive && <div className="badge badge-error">inactive</div>}
         </div>
@@ -50,7 +45,7 @@ interface SessionLapTableParams {
 function SessionLapTable({ session }: SessionLapTableParams) {
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto justify-center">
       <table className="table">
         <thead>
           <tr>
@@ -59,24 +54,19 @@ function SessionLapTable({ session }: SessionLapTableParams) {
             <th>Time Delta</th>
             <th>Validity</th>
             {Array.from({ length: session.numberOfSectors }, (_, i) => (
-              <>
-                <th>Sector {i + 1}</th >
-              </>
+              <th key={i + 5}>Sector {i + 1}</th >
             ))}
           </tr>
         </thead>
         <tbody>
           {session.laps.map((lap, _) => (
-            <>
-              <SessionLapTableRow lap={lap} />
-            </>
+            <SessionLapTableRow key={lap.lapNumber} lap={lap} />
           ))}
         </tbody>
       </table>
     </div >
   )
 }
-
 
 interface SessionLapTableRowParams {
   lap: Lap
@@ -88,12 +78,10 @@ function SessionLapTableRow({ lap }: SessionLapTableRowParams) {
     <tr className={selectionClass}>
       <th>{lap.lapNumber}</th>
       <td>{formatMilliseconds(lap.lapTime)}</td>
-      <td>{formatMilliseconds(lap.lapTime)}</td>
+      <td>TODO</td>
       <td>{lap.isValid ? "valid" : "invalid"}</td>
       {lap.lapSectors.map((s, _) => (
-        <>
-          <td>{formatMilliseconds(s.sectorTime)}</td>
-        </>
+        <td key={s.sectorNumber}>{formatMilliseconds(s.sectorTime)}</td>
       ))}
     </tr>
   )

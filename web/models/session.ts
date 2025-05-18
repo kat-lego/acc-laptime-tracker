@@ -20,8 +20,7 @@ export interface Session {
   carModel: string;
   numberOfSectors: number;
   completedLaps: number;
-  bestLapTime: number;
-  previousLapTime: number;
+  bestLap: number;
   isActive: boolean;
   player: string;
   laps: Lap[];
