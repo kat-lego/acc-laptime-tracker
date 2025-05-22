@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/exec"
@@ -41,12 +42,13 @@ func (p *program) run() {
 
 	reader := sessionreader.New(&logger)
 
-	cosmosConn := os.Getenv("ACC_COSMOS_CONNECTION_STRING")
-	cosmosDatabase := os.Getenv("ACC_COSMOS_DATABASE")
-	cosmosContainer := os.Getenv("ACC_COSMOS_CONTAINER")
-	repo, err := repos.NewCosmosSessionRepo(cosmosConn, cosmosDatabase, cosmosContainer)
+	projectId := os.Getenv("ACC_FIREBASE_PROJECT_ID")
+	databaseName := os.Getenv("ACC_FIREBASE_DATABASE")
+	containerName := os.Getenv("ACC_FIREBASE_COLLECTION")
+	cxt := context.Background()
+	repo, err := repos.NewFirebaseSessionRepo(cxt, projectId, databaseName, containerName)
 	if err != nil {
-		logger.Errorf("failed to connect to cosmos %v", err)
+		logger.Errorf("failed to connect to firebase %v", err)
 		os.Exit(1)
 	}
 

@@ -63,6 +63,7 @@ func (r *SessionReader) GetSessionUpdates() []*models.Session {
 	if isNewLap {
 		r.completeLastLap(state)
 		s.Laps = append(s.Laps, l)
+		updates = append(updates, s)
 		return updates
 	}
 
@@ -70,9 +71,10 @@ func (r *SessionReader) GetSessionUpdates() []*models.Session {
 	if isNewLapSector {
 		r.completeLastLapSector(state)
 		l.LapSectors = append(l.LapSectors, ls)
+		updates = append(updates, s)
+		return updates
 	}
 
-	updates = append(updates, s)
 	return updates
 }
 

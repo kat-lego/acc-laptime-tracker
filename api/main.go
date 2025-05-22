@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/kat-lego/acc-laptime-tracker/api/middleware"
 	"github.com/kat-lego/acc-laptime-tracker/pkg/repos"
 	"go.uber.org/zap"
-	"golang.org/x/time/rate"
 )
 
 var logger *zap.Logger
@@ -29,13 +29,14 @@ func main() {
 	logger = setupLogger()
 	defer logger.Sync()
 
-	cosmosConn := os.Getenv("ACC_COSMOS_CONNECTION_STRING")
-	cosmosDatabase := os.Getenv("ACC_COSMOS_DATABASE")
-	cosmosContainer := os.Getenv("ACC_COSMOS_CONTAINER")
-	repo, err := repos.NewCosmosSessionRepo(cosmosConn, cosmosDatabase, cosmosContainer)
+	projectId := os.Getenv("ACC_FIREBASE_PROJECT_ID")
+	database := os.Getenv("ACC_FIREBASE_DATABASE")
+	collectionName := os.Getenv("ACC_FIREBASE_COLLECTION")
+	cxt := context.Background()
+	repo, err := repos.NewFirebaseSessionRepo(cxt, projectId, database, collectionName)
 	if err != nil {
-		logger.Error("failed to connect to cosmos")
-		return
+		logger.Error("failed to connect to firebase")
+		os.Exit(1)
 	}
 
 	origins := strings.Split(os.Getenv("ACC_CORS_ORIGINS"), ",")
@@ -51,7 +52,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	router.Use(middleware.RateLimiter(rate.Every(time.Second/5), 10))
+	router.Use(middleware.RateLimiter())
 
 	router.GET("/api/sessions", handlers.GetSessionsHandler(repo, logger))
 
