@@ -9,10 +9,14 @@ CLOUD_RUN_SERVICE="acc-laptime-tracker-api"
 REGION="africa-south1"
 PLATFORM="managed"
 
+ACC_CORS_ORIGINS="https://acc-laptime-tracker-460418.web.app"
+
 ENV_VARS="ACC_FIREBASE_PROJECT_ID=acc-laptime-tracker-460418"
 ENV_VARS="$ENV_VARS,ACC_FIREBASE_DATABASE=acclaptimetracker"
 ENV_VARS="$ENV_VARS,ACC_FIREBASE_COLLECTION=session"
-ENV_VARS="$ENV_VARS,ACC_CORS_ORIGINS=http://localhost:3000"
+ENV_VARS="$ENV_VARS,ACC_CORS_ORIGINS=$ACC_CORS_ORIGINS"
+
+echo $ENV_VARS
 
 cp Dockerfile ../
 cd ..

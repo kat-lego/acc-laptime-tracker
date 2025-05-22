@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="{{- site.Language.Lang -}}">
+
+    <head>
+        {{- partial "head.html" . -}}
+        {{ $js := resources.Get "js/index.js" | minify | fingerprint }}
+        <script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>
+        <script>
+            const trackerApiBaseUrl = "{{ .Site.Params.trackerApiBaseUrl }}";
+        </script>
+    </head>
+
+    <body>
+        <div class="page">
+
+            <header class="page__header">
+                {{- partial "header.html" . -}}
+            </header>
+
+            <section class="page__aside">
+                <div class="aside__about">
+                    {{- partial "about.html" . -}}
+                </div>
+                <hr>
+                <div class="aside__content">
+                    {{- block "aside" . }}{{- end }}
+                </div>
+            </section>
+
+            <section class="page__body">
+                {{- partial "main.html" . }}
+            </section>
+
+            <footer class="page__footer">
+                {{- partial "footer.html" . -}}
+            </footer>
+
+        </div>
+    </body>
+
+</html>

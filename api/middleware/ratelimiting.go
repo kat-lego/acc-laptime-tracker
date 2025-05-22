@@ -22,7 +22,7 @@ func ipKeyGetter(c *gin.Context) string {
 func RateLimiter() gin.HandlerFunc {
 	rate := limiter.Rate{
 		Period: 1 * time.Minute,
-		Limit:  10,
+		Limit:  100,
 	}
 
 	store := memory.NewStore()

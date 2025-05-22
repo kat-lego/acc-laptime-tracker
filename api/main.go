@@ -12,6 +12,7 @@ import (
 	"github.com/kat-lego/acc-laptime-tracker/api/handlers"
 	"github.com/kat-lego/acc-laptime-tracker/api/middleware"
 	"github.com/kat-lego/acc-laptime-tracker/pkg/repos"
+	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 )
 
@@ -49,12 +50,12 @@ func main() {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
 	}))
 
 	router.Use(middleware.RateLimiter())
 
-	router.GET("/api/sessions", handlers.GetSessionsHandler(repo, logger))
+	ccache := cache.New(1*time.Minute, 10*time.Minute)
+	router.GET("/api/sessions", handlers.GetSessionsHandler(repo, ccache, logger))
 
 	port := os.Getenv("PORT")
 	if port == "" {
