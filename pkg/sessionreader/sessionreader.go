@@ -79,11 +79,17 @@ func (r *SessionReader) GetSessionUpdates() []*models.Session {
 }
 
 func (r *SessionReader) completeSession(state *models.AccGameState) {
+	logger := *r.logger
+
 	r.session.IsActive = false
 	r.completeLastLap(state)
+
+	logger.Info("completed a session")
 }
 
 func (r *SessionReader) completeLastLap(state *models.AccGameState) {
+	logger := *r.logger
+
 	r.session.CompletedLaps = state.CompletedLaps
 
 	nlaps := len(r.session.Laps)
@@ -99,9 +105,13 @@ func (r *SessionReader) completeLastLap(state *models.AccGameState) {
 		r.session.BestLap = l.LapNumber
 	}
 	r.completeLastLapSector(state)
+
+	logger.Infof("completed lap %d", l.LapNumber)
 }
 
 func (r *SessionReader) completeLastLapSector(state *models.AccGameState) {
+	logger := *r.logger
+
 	l := r.session.Laps[len(r.session.Laps)-1]
 	ls := l.LapSectors[len(l.LapSectors)-1]
 	ls.IsActive = false
@@ -110,6 +120,8 @@ func (r *SessionReader) completeLastLapSector(state *models.AccGameState) {
 	if ls.SectorNumber == r.session.NumberOfSectors {
 		ls.SectorTime = l.LapTime
 	}
+
+	logger.Infof("completed sector %d of lap %d", ls.SectorNumber, l.LapNumber)
 }
 
 func (r *SessionReader) getSession(state *models.AccGameState) (*models.Session, bool) {
@@ -166,15 +178,17 @@ func (r *SessionReader) getLap(state *models.AccGameState) (*models.Lap, bool) {
 	logger := *r.logger
 
 	trackedLaps := len(r.session.Laps)
-	if int32(trackedLaps-1) == state.CompletedLaps {
-		l := r.session.Laps[trackedLaps-1]
+	l := r.session.Laps[trackedLaps-1]
+
+	if state.CompletedLaps == int32(trackedLaps-1) && l.LapTime <= state.CurrentLapTime {
+		// logger.Info("lap is currency tracked")
 		l.IsValid = state.IsValid
 		l.LapTime = state.CurrentLapTime
 		return l, false
 	}
 
-	logger.Info("new lap started")
 	lap := models.Lap{
+		LapTime:   0,
 		LapNumber: state.CompletedLaps + 1,
 		IsValid:   true,
 		IsActive:  true,
@@ -186,6 +200,13 @@ func (r *SessionReader) getLap(state *models.AccGameState) (*models.Lap, bool) {
 		},
 	}
 
+	if state.CompletedLaps == int32(trackedLaps-1) && l.LapTime > state.CompletedLaps {
+		logger.Info("tracked lap re-started")
+		r.session.Laps[trackedLaps-1] = &lap
+		return &lap, false
+	}
+
+	logger.Info("new lap started")
 	return &lap, true
 }
 

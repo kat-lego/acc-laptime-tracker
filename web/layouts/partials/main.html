@@ -3,14 +3,16 @@
 </h1>
 
 
-<p id="session-details" style="display: none; font-weight: bold;">
+<p id="session-details" style="display: none;">
     no date | session type
 </p>
 
-<table id="laptimes-table" style="display: none; width:100%">
-    <thead><thead/>
-    <tbody><tbody/>
-</table>
+<div class="table-wrapper">
+    <table id="laptimes-table" style="display: none; width: 100%;">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+</div>
 
 <p id="no-data" style="display: none">No lap times available.</p>
 
@@ -24,7 +26,31 @@
     }
 
     .best-lap {
-      background-color: #7A1FA0;
+      background-color: #A020F0;
       color: white; /* Optional: improves readability */
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    @media (max-width: 600px) {
+        #session-title {
+            font-size: 1rem;
+        }
+
+        #session-details,
+        #no-data {
+            font-size: 1rem;
+        }
+
+        #laptimes-table,
+        #laptimes-table th,
+        #laptimes-table td {
+            font-size: 1rem;
+            text-align: left;
+            white-space: nowrap;
+        }
     }
 </style>

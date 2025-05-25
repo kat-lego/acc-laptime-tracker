@@ -128,7 +128,12 @@ document.addEventListener('session:selected', (e) => {
 
       // Lap time cell
       const lapTimeCell = document.createElement('td');
-      lapTimeCell.textContent = formatMilliseconds(lap.lapDelta);
+      if (lap.lapSectors.length < numSectors || lap.lapNumber == 1) {
+        lapTimeCell.textContent = '-';
+      } else {
+        const sign = lap.lapDelta >= 0 ? '+' : '-';
+        lapTimeCell.textContent = `${sign} ${formatMilliseconds(lap.lapDelta)}`;
+      }
       row.appendChild(lapTimeCell);
 
       tbody.appendChild(row);
@@ -162,6 +167,8 @@ function formatMilliseconds(ms) {
   if (ms >= 3600000) {
     return '--:--:---';
   }
+
+  ms = Math.abs(ms)
 
   const minutes = Math.floor(ms / (1000 * 60));
   const seconds = Math.floor((ms % (1000 * 60)) / 1000);
