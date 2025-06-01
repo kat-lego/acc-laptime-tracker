@@ -95,7 +95,10 @@ func (r *FirebaseSessionRepo) GetRecentSessions() ([]*models.Session, error) {
 
 func (r *FirebaseSessionRepo) CleanUpSessions() error {
 	ctx := context.Background()
-	query := r.collection.Where("lapsCompleted", "<=", 3).Where("isActive", "==", false)
+	query := r.collection.
+		Where("isActive", "==", false).
+		Where("lapsCompleted", "<=", 3)
+
 	iter := query.Documents(ctx)
 
 	for {
