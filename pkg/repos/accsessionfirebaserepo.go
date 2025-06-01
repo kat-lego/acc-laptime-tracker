@@ -7,6 +7,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/kat-lego/acc-laptime-tracker/pkg/models"
+	"google.golang.org/api/iterator"
 )
 
 type FirebaseSessionRepo struct {
@@ -15,12 +16,11 @@ type FirebaseSessionRepo struct {
 }
 
 func NewFirebaseSessionRepo(
-	ctx context.Context,
 	projectID string,
 	databaseName string,
 	collectionName string,
 ) (*FirebaseSessionRepo, error) {
-	client, err := firestore.NewClientWithDatabase(ctx, projectID, databaseName)
+	client, err := firestore.NewClientWithDatabase(context.Background(), projectID, databaseName)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"initializing Firestore client with database %q: %w",
@@ -68,7 +68,8 @@ func (r *FirebaseSessionRepo) upsertSession(session *models.Session) (string, er
 	return session.Id, nil
 }
 
-func (r *FirebaseSessionRepo) GetRecentSessions(ctx context.Context) ([]*models.Session, error) {
+func (r *FirebaseSessionRepo) GetRecentSessions() ([]*models.Session, error) {
+	ctx := context.Background()
 	query := r.collection.OrderBy("startTime", firestore.Desc).Limit(20)
 
 	docs, err := query.Documents(ctx).GetAll()
@@ -90,4 +91,29 @@ func (r *FirebaseSessionRepo) GetRecentSessions(ctx context.Context) ([]*models.
 	}
 
 	return sessions, nil
+}
+
+func (r *FirebaseSessionRepo) CleanUpSessions() error {
+	ctx := context.Background()
+	query := r.collection.Where("lapsCompleted", "<=", 3)
+	iter := query.Documents(ctx)
+
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Deleting somethng")
+
+		_, err = doc.Ref.Delete(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

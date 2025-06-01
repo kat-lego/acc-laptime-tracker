@@ -82,7 +82,10 @@ func (r *SessionReader) completeSession(state *models.AccGameState) {
 	logger := *r.logger
 
 	r.session.IsActive = false
-	r.completeLastLap(state)
+
+	nlaps := len(r.session.Laps)
+	l := r.session.Laps[nlaps-1]
+	l.IsActive = false
 
 	logger.Info("completed a session")
 }
@@ -90,7 +93,7 @@ func (r *SessionReader) completeSession(state *models.AccGameState) {
 func (r *SessionReader) completeLastLap(state *models.AccGameState) {
 	logger := *r.logger
 
-	r.session.CompletedLaps = state.CompletedLaps
+	r.session.LapsCompleted = state.CompletedLaps
 
 	nlaps := len(r.session.Laps)
 	l := r.session.Laps[nlaps-1]
@@ -101,7 +104,7 @@ func (r *SessionReader) completeLastLap(state *models.AccGameState) {
 		l.LapDelta = l.LapTime - r.session.Laps[nlaps-2].LapTime
 	}
 
-	if r.session.BestLap == 0 || l.LapTime < r.session.Laps[r.session.BestLap-1].LapTime {
+	if l.LapNumber > 1 && l.LapTime < r.session.Laps[r.session.BestLap-1].LapTime {
 		r.session.BestLap = l.LapNumber
 	}
 	r.completeLastLapSector(state)
@@ -133,8 +136,8 @@ func (r *SessionReader) getSession(state *models.AccGameState) (*models.Session,
 		return nil, true
 	}
 
-	if r.session != nil && r.session.CompletedLaps <= state.CompletedLaps {
-		r.session.CompletedLaps = state.CompletedLaps
+	if r.session != nil && r.session.LapsCompleted <= state.CompletedLaps {
+		r.session.LapsCompleted = state.CompletedLaps
 		return r.session, false
 	}
 
@@ -152,8 +155,8 @@ func (r *SessionReader) getSession(state *models.AccGameState) (*models.Session,
 		NumberOfSectors: state.SectorCount,
 		CarModel:        state.CarModel,
 		IsActive:        true,
-		CompletedLaps:   0,
-		BestLap:         0,
+		LapsCompleted:   0,
+		BestLap:         1,
 		Player:          "anonymous",
 
 		Laps: []*models.Lap{

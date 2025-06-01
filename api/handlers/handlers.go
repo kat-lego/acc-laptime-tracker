@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -28,7 +27,7 @@ func GetSessionsHandler(
 			return
 		}
 
-		sessions, err := repo.GetRecentSessions(context.Background())
+		sessions, err := repo.GetRecentSessions()
 		if err != nil {
 			logger.Sugar().Errorf("Failed to fetch sessions: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch sessions"})

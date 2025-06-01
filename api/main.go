@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -33,8 +32,7 @@ func main() {
 	projectId := os.Getenv("ACC_FIREBASE_PROJECT_ID")
 	database := os.Getenv("ACC_FIREBASE_DATABASE")
 	collectionName := os.Getenv("ACC_FIREBASE_COLLECTION")
-	cxt := context.Background()
-	repo, err := repos.NewFirebaseSessionRepo(cxt, projectId, database, collectionName)
+	repo, err := repos.NewFirebaseSessionRepo(projectId, database, collectionName)
 	if err != nil {
 		logger.Error("failed to connect to firebase")
 		os.Exit(1)

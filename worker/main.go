@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/exec"
@@ -44,20 +43,25 @@ func (p *program) run() {
 
 	projectId := os.Getenv("ACC_FIREBASE_PROJECT_ID")
 	databaseName := os.Getenv("ACC_FIREBASE_DATABASE")
-	containerName := os.Getenv("ACC_FIREBASE_COLLECTION")
-	cxt := context.Background()
-	repo, err := repos.NewFirebaseSessionRepo(cxt, projectId, databaseName, containerName)
+	collectionName := os.Getenv("ACC_FIREBASE_COLLECTION")
+	repo, err := repos.NewFirebaseSessionRepo(projectId, databaseName, collectionName)
 	if err != nil {
 		logger.Errorf("failed to connect to firebase %v", err)
 		os.Exit(1)
 	}
+
+	accTicker := time.NewTicker(1 * time.Second)
+	cleanupTicker := time.NewTicker(1 * time.Minute)
+	defer accTicker.Stop()
+	defer cleanupTicker.Stop()
 
 	for {
 		select {
 		case <-p.quit:
 			logger.Info("Service stopping...")
 			return
-		default:
+
+		case <-accTicker.C:
 			if isACCRunning() {
 				s := reader.GetSessionUpdates()
 				if s != nil {
@@ -72,7 +76,16 @@ func (p *program) run() {
 					logger.Info("ACC is not running")
 				}
 			}
-			time.Sleep(1 * time.Second)
+
+		case <-cleanupTicker.C:
+			go func() {
+				err := repo.CleanUpSessions()
+				if err != nil {
+					logger.Errorf("Failed to cleanup sessions: %v", err)
+				} else {
+					logger.Info("Cleanup complete")
+				}
+			}()
 		}
 	}
 }

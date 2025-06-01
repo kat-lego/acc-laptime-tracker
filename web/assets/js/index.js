@@ -100,7 +100,7 @@ document.addEventListener('session:selected', (e) => {
       }
 
       // Add class for best lap
-      if (index === session.bestLap) {
+      if (index + 1 === session.bestLap) {
         row.classList.add('best-lap');
       }
 

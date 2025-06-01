@@ -7,7 +7,7 @@ type Session struct {
 	Track           string `json:"track"`
 	CarModel        string `json:"carModel"`
 	NumberOfSectors int32  `json:"numberOfSectors"`
-	CompletedLaps   int32  `json:"lapsCompleted"`
+	LapsCompleted   int32  `json:"lapsCompleted"`
 	BestLap         int32  `json:"bestLap"`
 	IsActive        bool   `json:"isActive"`
 	Player          string `json:"player"`
