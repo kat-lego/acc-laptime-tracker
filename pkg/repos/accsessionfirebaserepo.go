@@ -107,8 +107,6 @@ func (r *FirebaseSessionRepo) CleanUpSessions() error {
 			return err
 		}
 
-		fmt.Printf("Deleting somethng")
-
 		_, err = doc.Ref.Delete(ctx)
 		if err != nil {
 			return err
