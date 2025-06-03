@@ -23,3 +23,11 @@ type AccGameState struct {
 	IsInPitLane        bool  `json:"isInPitLane"`
 	IsInPit            bool  `json:"isInPit"`
 }
+
+func (s *AccGameState) IsSessionStopped() bool {
+	return s.SessionType == "ACC_UNKNOWN" || s.Status == "ACC_OFF"
+}
+
+func (s *AccGameState) IsSessionPaused() bool {
+	return s.Status == "ACC_PAUSE" || s.Status == "ACC_REPLAY"
+}

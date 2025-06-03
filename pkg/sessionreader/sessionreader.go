@@ -29,120 +29,74 @@ func (r *SessionReader) GetSessionUpdates() []*models.Session {
 
 	state, err := r.statereader.GetState()
 	if err != nil {
-		logger.Error("failed to get the game state")
-		r.session = nil
+		logger.Error("Failed to get the game state.")
+		r.stopTrackingSession()
 		return updates
 	}
 
-	if state.Status == "ACC_PAUSE" || state.Status == "ACC_REPLAY" {
-		logger.Infof("game state is paused. status: %s", state.Status)
+	if state.IsSessionPaused() {
+		logger.Infof("Session is paused. Status: %s.", state.Status)
 		return updates
 	}
 
-	s, isNewSession := r.getSession(state)
-	if s == nil {
-		if r.session != nil {
-			r.completeSession(state)
-			updates = append(updates, r.session)
-		}
-		r.session = nil
+	if state.IsSessionStopped() {
+		updates = append(updates, r.completeSession(state))
+		r.stopTrackingSession()
+		logger.Infof("Session is stopped. Status: %s.", state.Status)
 		return updates
 	}
 
-	if isNewSession {
-		if r.session != nil {
-			r.completeSession(state)
-			updates = append(updates, r.session)
-		}
-		updates = append(updates, s)
-		r.session = s
+	if !r.hasTrackedSession() {
+		updates = append(updates, r.initializeSession(state))
+		logger.Infof("No previously tracked session. New session started.")
 		return updates
 	}
 
-	l, isNewLap := r.getLap(state)
-	if isNewLap {
-		r.completeLastLap(state)
-		s.Laps = append(s.Laps, l)
-		updates = append(updates, s)
+	if r.sessionChanged(state) {
+		updates = append(updates, r.completeSession(state))
+		updates = append(updates, r.initializeSession(state))
+		logger.Infof("New session started")
 		return updates
 	}
 
-	ls, isNewLapSector := r.getLapSector(state)
-	if isNewLapSector {
-		r.completeLastLapSector(state)
-		l.LapSectors = append(l.LapSectors, ls)
-		updates = append(updates, s)
+	r.updateSession(state)
+
+	if r.lapChanged(state) {
+		r.completeLap(state)
+		updates = append(updates, r.initializeLap(state))
+		logger.Infof("New lap started")
+		return updates
+	}
+
+	if r.lapRestarted(state) {
+		r.stopTrackingLap()
+		updates = append(updates, r.initializeLap(state))
+		logger.Infof("Lap restarted")
+		return updates
+	}
+
+	r.updateLap(state)
+
+	if r.sectorChanged(state) {
+		r.completeSector(state)
+		updates = append(updates, r.initializeSector(state))
+		logger.Infof("New sector started")
 		return updates
 	}
 
 	return updates
 }
 
-func (r *SessionReader) completeSession(state *models.AccGameState) {
-	logger := *r.logger
-
-	r.session.IsActive = false
-
-	nlaps := len(r.session.Laps)
-	l := r.session.Laps[nlaps-1]
-	l.IsActive = false
-
-	logger.Info("completed a session")
+// session
+func (r *SessionReader) hasTrackedSession() bool {
+	return r.session != nil
 }
 
-func (r *SessionReader) completeLastLap(state *models.AccGameState) {
-	logger := *r.logger
-
-	r.session.LapsCompleted = state.CompletedLaps
-
-	nlaps := len(r.session.Laps)
-	l := r.session.Laps[nlaps-1]
-	l.IsActive = false
-	l.LapTime = state.PreviousLapTime
-
-	if nlaps > 1 {
-		l.LapDelta = l.LapTime - r.session.Laps[nlaps-2].LapTime
-	}
-
-	if l.LapNumber > 1 && l.LapTime < r.session.Laps[r.session.BestLap-1].LapTime {
-		r.session.BestLap = l.LapNumber
-	}
-	r.completeLastLapSector(state)
-
-	logger.Infof("completed lap %d", l.LapNumber)
+func (r *SessionReader) sessionChanged(state *models.AccGameState) bool {
+	return r.session.LapsCompleted > state.CompletedLaps
 }
 
-func (r *SessionReader) completeLastLapSector(state *models.AccGameState) {
-	logger := *r.logger
-
-	l := r.session.Laps[len(r.session.Laps)-1]
-	ls := l.LapSectors[len(l.LapSectors)-1]
-	ls.IsActive = false
-	ls.SectorTime = state.PreviousSectorTime
-
-	if ls.SectorNumber == r.session.NumberOfSectors {
-		ls.SectorTime = l.LapTime
-	}
-
-	logger.Infof("completed sector %d of lap %d", ls.SectorNumber, l.LapNumber)
-}
-
-func (r *SessionReader) getSession(state *models.AccGameState) (*models.Session, bool) {
-	logger := *r.logger
-
-	if state.SessionType == "ACC_UNKNOWN" || state.Status == "ACC_OFF" {
-		logger.Infof("there is a break in session continuity [session type: %s][status: %s]",
-			state.SessionType, state.Status)
-		return nil, true
-	}
-
-	if r.session != nil && r.session.LapsCompleted <= state.CompletedLaps {
-		r.session.LapsCompleted = state.CompletedLaps
-		return r.session, false
-	}
-
-	logger.Info("starting new session")
-
+func (r *SessionReader) initializeSession(state *models.AccGameState) *models.Session {
 	ts := time.Now().UTC().Unix()
 	t := time.Unix(ts, 0).UTC()
 	id := t.Format("20060102T150405Z")
@@ -174,22 +128,55 @@ func (r *SessionReader) getSession(state *models.AccGameState) (*models.Session,
 		},
 	}
 
-	return &session, true
+	r.session = &session
+
+	return &session
 }
 
-func (r *SessionReader) getLap(state *models.AccGameState) (*models.Lap, bool) {
-	logger := *r.logger
+func (r *SessionReader) updateSession(state *models.AccGameState) *models.Session {
+	r.session.LapsCompleted = state.CompletedLaps
 
-	trackedLaps := len(r.session.Laps)
-	l := r.session.Laps[trackedLaps-1]
+	return r.session
+}
 
-	if state.CompletedLaps == int32(trackedLaps-1) && l.LapTime <= state.CurrentLapTime {
-		// logger.Info("lap is currency tracked")
-		l.IsValid = state.IsValid
-		l.LapTime = state.CurrentLapTime
-		return l, false
-	}
+func (r *SessionReader) completeSession(state *models.AccGameState) *models.Session {
+	session := r.session
+	session.IsActive = false
 
+	nlaps := len(session.Laps)
+	l := session.Laps[nlaps-1]
+	l.IsActive = false
+
+	nSectors := len(l.LapSectors)
+	sc := l.LapSectors[nSectors-1]
+	sc.IsActive = false
+
+	// assume the last lap will be incomplete
+	session.Laps = session.Laps[:nlaps-1]
+
+	return session
+}
+
+func (r *SessionReader) stopTrackingSession() {
+	r.session = nil
+}
+
+// lap
+func (r *SessionReader) lapChanged(state *models.AccGameState) bool {
+	nlaps := len(r.session.Laps)
+	l := r.session.Laps[nlaps-1]
+
+	return l.LapNumber < state.CompletedLaps+1
+}
+
+func (r *SessionReader) lapRestarted(state *models.AccGameState) bool {
+	nlaps := len(r.session.Laps)
+	l := r.session.Laps[nlaps-1]
+
+	return l.LapNumber == state.CompletedLaps+1 && l.LapTime > state.CurrentLapTime
+}
+
+func (r *SessionReader) initializeLap(state *models.AccGameState) *models.Session {
 	lap := models.Lap{
 		LapTime:   0,
 		LapNumber: state.CompletedLaps + 1,
@@ -203,32 +190,76 @@ func (r *SessionReader) getLap(state *models.AccGameState) (*models.Lap, bool) {
 		},
 	}
 
-	if state.CompletedLaps == int32(trackedLaps-1) && l.LapTime > state.CompletedLaps {
-		logger.Info("tracked lap re-started")
-		r.session.Laps[trackedLaps-1] = &lap
-		return &lap, false
-	}
+	r.session.Laps = append(r.session.Laps, &lap)
 
-	logger.Info("new lap started")
-	return &lap, true
+	return r.session
 }
 
-func (r *SessionReader) getLapSector(state *models.AccGameState) (*models.LapSector, bool) {
-	logger := *r.logger
-	trackedLaps := len(r.session.Laps)
-	latestLap := r.session.Laps[trackedLaps-1]
-	trackedSectors := len(latestLap.LapSectors)
+func (r *SessionReader) updateLap(state *models.AccGameState) *models.Session {
+	nlaps := len(r.session.Laps)
+	l := r.session.Laps[nlaps-1]
 
-	if int32(trackedSectors-1) == state.CurrentSectorIndex {
-		ls := latestLap.LapSectors[trackedSectors-1]
-		return ls, false
+	l.LapTime = state.CurrentLapTime
+	l.IsValid = state.IsValid
+
+	return r.session
+}
+
+func (r *SessionReader) completeLap(state *models.AccGameState) *models.Session {
+	nlaps := len(r.session.Laps)
+	l := r.session.Laps[nlaps-1]
+
+	l.IsActive = false
+	l.LapTime = state.PreviousLapTime
+
+	if nlaps > 1 {
+		l.LapDelta = l.LapTime - r.session.Laps[nlaps-2].LapTime
 	}
 
-	logger.Info("new lap sector started")
+	if l.LapNumber > 1 && l.LapTime < r.session.Laps[r.session.BestLap-1].LapTime {
+		r.session.BestLap = l.LapNumber
+	}
+
+	r.completeSector(state)
+
+	return r.session
+}
+
+func (r *SessionReader) stopTrackingLap() {
+	nlaps := len(r.session.Laps)
+	r.session.Laps = r.session.Laps[:nlaps-1]
+}
+
+// sector
+func (r *SessionReader) sectorChanged(state *models.AccGameState) bool {
+	nlaps := len(r.session.Laps)
+	l := r.session.Laps[nlaps-1]
+	nSectors := len(l.LapSectors)
+	s := l.LapSectors[nSectors-1]
+
+	return s.SectorNumber != state.CurrentSectorIndex
+}
+
+func (r *SessionReader) initializeSector(state *models.AccGameState) *models.Session {
+	nlaps := len(r.session.Laps)
+	l := r.session.Laps[nlaps-1]
+
 	lapSector := models.LapSector{
 		SectorNumber: state.CurrentSectorIndex + 1,
 		IsActive:     true,
 	}
 
-	return &lapSector, true
+	l.LapSectors = append(l.LapSectors, &lapSector)
+	return r.session
+}
+
+func (r *SessionReader) completeSector(state *models.AccGameState) {
+	l := r.session.Laps[len(r.session.Laps)-1]
+	ls := l.LapSectors[len(l.LapSectors)-1]
+	ls.IsActive = false
+	ls.SectorTime = state.PreviousSectorTime
+
+	if ls.SectorNumber == r.session.NumberOfSectors {
+		ls.SectorTime = l.LapTime
+	}
 }
