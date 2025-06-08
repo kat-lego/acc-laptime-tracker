@@ -10,6 +10,7 @@ REGION="africa-south1"
 PLATFORM="managed"
 
 ACC_CORS_ORIGINS="https://acc-laptime-tracker-460418.web.app"
+ACC_CORS_ORIGINS="$ACC_CORS_ORIGINS|https://acc.katlegomodupi.com"
 
 ENV_VARS="ACC_FIREBASE_PROJECT_ID=acc-laptime-tracker-460418"
 ENV_VARS="$ENV_VARS,ACC_FIREBASE_DATABASE=acclaptimetracker"

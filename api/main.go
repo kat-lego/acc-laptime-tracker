@@ -38,7 +38,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	origins := strings.Split(os.Getenv("ACC_CORS_ORIGINS"), ",")
+	origins := strings.Split(os.Getenv("ACC_CORS_ORIGINS"), "|")
 
 	router := gin.Default()
 

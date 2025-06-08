@@ -40,7 +40,9 @@ func (r *SessionReader) GetSessionUpdates() []*models.Session {
 	}
 
 	if state.IsSessionStopped() {
-		updates = append(updates, r.completeSession(state))
+		if r.hasTrackedSession() {
+			updates = append(updates, r.completeSession(state))
+		}
 		r.stopTrackingSession()
 		logger.Infof("Session is stopped. Status: %s.", state.Status)
 		return updates
@@ -154,6 +156,10 @@ func (r *SessionReader) completeSession(state *models.AccGameState) *models.Sess
 	// assume the last lap will be incomplete
 	session.Laps = session.Laps[:nlaps-1]
 
+	logger := *r.logger
+	logger.Infof("Completing session with %s completed laps and %s laps",
+		session.LapsCompleted, len(session.Laps))
+
 	return session
 }
 
@@ -234,10 +240,11 @@ func (r *SessionReader) stopTrackingLap() {
 func (r *SessionReader) sectorChanged(state *models.AccGameState) bool {
 	nlaps := len(r.session.Laps)
 	l := r.session.Laps[nlaps-1]
+
 	nSectors := len(l.LapSectors)
 	s := l.LapSectors[nSectors-1]
 
-	return s.SectorNumber != state.CurrentSectorIndex
+	return s.SectorNumber-1 != state.CurrentSectorIndex
 }
 
 func (r *SessionReader) initializeSector(state *models.AccGameState) *models.Session {
