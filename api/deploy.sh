@@ -38,7 +38,8 @@ gcloud run deploy "$CLOUD_RUN_SERVICE" \
   --region "$REGION" \
   --allow-unauthenticated \
   --set-env-vars "$ENV_VARS" \
-  --project "$GCP_PROJECT"
+  --project "$GCP_PROJECT" \
+  --max-instances 1 \
 
 rm Dockerfile
 

@@ -126,15 +126,16 @@ document.addEventListener('session:selected', (e) => {
         }
       }
 
-      // Lap time cell
-      const lapTimeCell = document.createElement('td');
+      // Lap delta cell
+      const lapDeltaCell = document.createElement('td');
       if (lap.lapSectors.length < numSectors || lap.lapNumber == 1) {
-        lapTimeCell.textContent = '-';
+        lapDeltaCell.textContent = '-';
       } else {
         const sign = lap.lapDelta >= 0 ? '+' : '-';
-        lapTimeCell.textContent = `${sign} ${formatMilliseconds(lap.lapDelta)}`;
+        lapDeltaCell.classList.add(lap.lapDelta >= 0 ? 'positive-delta' : 'negative-delta')
+        lapDeltaCell.textContent = `${sign} ${formatMilliseconds(lap.lapDelta)}`;
       }
-      row.appendChild(lapTimeCell);
+      row.appendChild(lapDeltaCell);
 
       tbody.appendChild(row);
     });

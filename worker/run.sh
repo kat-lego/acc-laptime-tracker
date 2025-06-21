@@ -2,7 +2,6 @@
 
 set -e
 
-# Colors
 YELLOW="\033[1;33m"
 GREEN="\033[1;32m"
 BLUE="\033[1;34m"
@@ -10,7 +9,6 @@ CYAN="\033[1;36m"
 RED="\033[1;31m"
 RESET="\033[0m"
 
-# Emoji prefixes
 INFO="🛈"
 OK="✅"
 RUN="🚀"
@@ -18,7 +16,6 @@ COPY="📁"
 WARN="⚠️"
 BUILD="🔧"
 
-# Get raw Windows TEMP and HOME paths
 echo -e "${BLUE}${INFO} Gathering Windows environment paths...${RESET}"
 RAW_WINDOWS_TEMP=$(powershell.exe -Command "[System.Environment]::GetEnvironmentVariable('TEMP', 'User')")
 RAW_WIN_HOME=$(powershell.exe -Command "[System.Environment]::GetEnvironmentVariable('USERPROFILE')")
