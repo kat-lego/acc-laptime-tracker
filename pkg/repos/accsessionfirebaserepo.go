@@ -40,6 +40,11 @@ func NewFirebaseSessionRepo(
 func (r *FirebaseSessionRepo) UpsertSessions(sessions []*models.Session) error {
 	for _, s := range sessions {
 		if _, err := r.upsertSession(s); err != nil {
+			// TODO: plaster
+			if s.LapsCompleted == 0 && len(s.Laps)-1 > 0 {
+				fmt.Printf("HAD TO PUT A PLASTER ON THE NUMBER OF LAPS ISSUE")
+				s.LapsCompleted = int32(len(s.Laps)) - 1
+			}
 			fmt.Printf("%v", err)
 			return err
 		}
