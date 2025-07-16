@@ -102,7 +102,7 @@ func (r *FirebaseSessionRepo) CleanUpSessions() error {
 	ctx := context.Background()
 	query := r.collection.
 		Where("isActive", "==", false).
-		Where("lapsCompleted", "<=", 3)
+		Where("lapsCompleted", "<=", 5)
 
 	iter := query.Documents(ctx)
 
