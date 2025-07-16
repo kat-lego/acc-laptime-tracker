@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    console.log(`Fetching sessions from ${trackerApiBaseUrl}/api/sessions`)
     const response = await fetch(`${trackerApiBaseUrl}/api/sessions`);
     if (!response.ok) throw new Error('Failed to fetch sessions');
 

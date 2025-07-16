@@ -165,6 +165,7 @@ func (r *SessionReader) completeSession(state *models.AccGameState) *models.Sess
 
 func (r *SessionReader) stopTrackingSession() {
 	r.session = nil
+	r.session.IsActive = false
 }
 
 // lap
